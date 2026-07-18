@@ -1,0 +1,33 @@
+services:  # Servisler (Konteynerler) dizimi
+
+  # 1-servis: Maǵlıwmatlar bazası (PostgreSQL)
+  db:
+    image: postgres:17-alpine  # Rásmiy, jeńil PostgreSQL
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/  # Maǵlıwmatlardı saqlaw (Persistency)
+    environment:
+      - POSTGRES_DB=taskapp_db  # Baza atı
+      - POSTGRES_USER=taskapp_user # Paydalanıwshı
+      - POSTGRES_PASSWORD=tasksuperpassword  # Parol
+    ports:
+      - "5432:5432" # Kompyuterden bazaǵa kiriw ushın (optional)
+
+  # 2-servis: Biziń Django joybarımız
+  web:
+    build: .  # Dockerfile-di usı papkadan izle hám qur
+    command: python manage.py runserver 0.0.0.0:8080  # Islep shıǵıw ushın
+    # Real deployda: command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app  # Kodtı jańalaw (Hot-reload) ushın
+    ports:
+      - "8080:8080"  # Brauzerden kiriw ushın
+    depends_on:
+      - db  # Baza iske túspesten, Django iske túspewi kerek
+    environment:
+      - DB_NAME=taskapp_db
+      - DB_USER=taskapp_user
+      - DB_PASSWORD=tasksuperpassword
+      - DB_HOST=db  # Servis atı hostname boladı!
+
+volumes:
+  postgres_data:  # Baza maǵlıwmatları saqlanatuǵın orın
